@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>薬物動態学シミュレーション</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <!-- ナビゲーションバー -->
+    <nav class="navbar navbar-expand-md navbar-dark bg-primary sticky-top">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">薬物動態シミュレーション</a>
+
+        <!-- ハンバーガーメニュー -->
+        <button class="navbar-toggler" type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false"
+          aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- ナビゲーションメニュー開始 -->
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="nav navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle active"
+                 data-bs-toggle="dropdown"
+                 href="#" role="button" aria-expanded="false">
+                課題
+              </a>
+              <!-- ここからドロップダウンメニュー -->
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li class="nav-item">
+                  <a class="dropdown-item nav-link text-dark active"
+                     data-bs-toggle="tab" href="#elem-compmodel">
+                    課題1：コンパートメントモデル
+                  </a></li>
+                <li class="nav-item">
+                  <a class="dropdown-item nav-link text-dark"
+                     data-bs-toggle="tab" href="#elem-parameters">
+                    課題2：パラメーター
+                  </a></li>
+                <li class="nav-item">
+                  <a class="dropdown-item nav-link text-dark"
+                     data-bs-toggle="tab" href="#elem-administration">
+                    課題3：投与方法
+                  </a></li>
+                <li class="nav-item">
+                  <a class="dropdown-item nav-link text-dark"
+                     data-bs-toggle="tab" href="#elem-repeat">
+                    課題4-1-1：反復投与
+                  </a></li>
+                <li class="nav-item">
+                  <a class="dropdown-item nav-link text-dark"
+                     data-bs-toggle="tab" href="#elem-loading">
+                    課題4-1-2：負荷投与
+                  </a></li>
+                <li class="nav-item">
+                  <a class="dropdown-item nav-link text-dark"
+                     data-bs-toggle="tab" href="#elem-plan">
+                    課題4-2：投与計画
+                  </a></li>
+                <li class="nav-item">
+                  <a class="dropdown-item nav-link text-dark"
+                     data-bs-toggle="tab" href="#elem-dysfunctionA">
+                    課題5-1：臓器障害（腎排泄型薬物）
+                  </a></li>
+                <li class="nav-item">
+                  <a class="dropdown-item nav-link text-dark"
+                     data-bs-toggle="tab" href="#elem-dysfunctionB">
+                    課題5-2：臓器障害（肝排泄型薬物）
+                  </a></li>
+                <li class="nav-item">
+                  <a class="dropdown-item nav-link text-dark"
+                     data-bs-toggle="tab" href="#elem-Vd">
+                    課題6：分布容積
+                  </a></li>
+                <li class="nav-item"><div class="dropdown-divider"></div></li>
+                <li class="nav-item">
+                  <a class="dropdown-item nav-link text-dark"
+                     data-bs-toggle="tab" href="#elem-infusion">
+                    補足事項：点滴
+                  </a></li>
+                <li class="nav-item"><div class="dropdown-divider"></div></li>
+                <li class="nav-item">
+                  <a class="dropdown-item nav-link text-dark" id="btn_quit">
+                    終了
+                  </a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <!-- ナビゲーションメニュー終了 -->
+      </div>
+    </nav>
+
+    <div class="mx-5 my-4">
+      <div class="tab-content" id="sim-panel">
+
+        <!-- コンパートメントモデル 開始 -->
+        <div id="elem-compmodel" class="tab-pane show active">
+          <h4>1-および2-コンパートメントモデルによる血中濃度の推移の違い</h4>
+          <h5>青色：1-コンパートメントモデル</h5>
+          <h5>オレンジ色：2-コンパートメントモデル</h5>
+          <BR>
+          <div class="row">
+            <!-- set parameter (start) -->
+            <div class="col-sm-5">
+              <div class="card p-3 bg-light">
+                <div class="row">
+                  <label class="form-label">
+                    k12値（中央 → 末梢）（0の場合には1-コンパートメントモデル）
+                  </label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-k12"
+                             type="range" class="form-range"
+                             min="0" max="30" step="0.1" value="0">
+                    </div>
+                    <div class="col-5" id="value-k12">0.0 (1/h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">k21値（中央 ← 末梢）</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-k21"
+                             type="range" class="form-range"
+                             min="0" max="30" step="0.1" value="1">
+                    </div>
+                    <div class="col-5" id="value-k21">1.0 (1/h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">ka値（0の場合は静脈内注射）</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-ka"
+                             type="range" class="form-range"
+                             min="0" max="20" step="0.1" value="0.0">
+                    </div>
+                    <div class="col-5" id="value-ka">1.0 (1/h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">クリアランス値</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-cl"
+                             type="range" class="form-range"
+                             min="1" max="50" step="0.5" value="10">
+                    </div>
+                    <div class="col-5" id="value-cl">10.0 (L/h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">分布容積</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-vc"
+                             type="range" class="form-range"
+                             min="5" max="50" step="0.5" value="10">
+                    </div>
+                    <div class="col-5" id="value-vc">10.0 (L)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="mx-2 mt-3">
+                    <div class="form-check ">
+                      <input class="form-check-input" type="checkbox" value=""
+                             id="param-isLog">
+                      <label class="form-check-label" for="param-isLog">
+                        対数目盛
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- set parameter (start) -->
+
+            <!-- plot -->
+            <div class="col-sm-7">
+              <div id="my-container" style="width: 540px; height: 500px">
+                <div id="plot-compmodel"></div>
+              </div>
+              <p id="result"></p>
+            </div>
+          </div>
+        </div>
+        <!-- コンパートメントモデル 終了 -->
+
+        <!-- 各種パラメーター 開始 -->
+        <div id="elem-parameters" class="tab-pane">
+          <h4>各種パラメーターによる血中濃度の推移の変化</h4>
+          <BR>
+          <div class="row">
+            <!-- set parameter (start) -->
+            <div class="col-sm-5">
+              <div class="card p-3 bg-light">
+                <div class="row">
+                  <label class="form-label">ka値（経口投与）</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-ka"
+                             type="range" class="form-range"
+                             min="0" max="20" step="0.1" value="3.0">
+                    </div>
+                    <div class="col-5" id="value-ka">3.0 (1/h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">クリアランス値</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-cl"
+                             type="range" class="form-range"
+                             min="1" max="50" step="0.5" value="10">
+                    </div>
+                    <div class="col-5" id="value-cl">10.0 (L/h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">分布容積</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-vc"
+                             type="range" class="form-range"
+                             min="5" max="50" step="0.5" value="10">
+                    </div>
+                    <div class="col-5" id="value-vc">10.0 (L)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">初回通過効果</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-f"
+                             type="range" class="form-range"
+                             min="0" max="1" step="0.05" value="0.8">
+                    </div>
+                    <div class="col-5" id="value-f">0.80</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="mx-2 mt-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value=""
+                             id="param-isLog">
+                      <label class="form-check-label" for="param-isLog">
+                        対数目盛
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- set parameter (start) -->
+
+            <!-- plot -->
+            <div class="col-sm-7">
+              <div id="my-container" style="width: 540px; height: 500px">
+                <div id="plot-parameters"></div>
+                <table id="table-parameters"></table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 各種パラメーター 終了 -->
+
+        <!-- 投与経路 開始 -->
+        <div id="elem-administration" class="tab-pane">
+          <h4>薬物の投与方法による違いによる血中濃度の推移</h4>
+          <h5>薬物：アモキシシリン</h5>
+          <BR>
+          <div class="row">
+            <!-- set parameter (start) -->
+            <div class="col-sm-5">
+              <div class="card p-3 bg-light">
+                <form>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-ka-po">
+                      ka値（経口投与） (1/h)
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-ka-po" value="0.8">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-ka-im">
+                      ka値（筋肉内注射） (1/h)
+                    </label>
+                    <input class="form-control" type="text"
+                           id="param-ka-im" value="8">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-amt">
+                      投与量 (mg)
+                    </label>
+                    <input class="form-control" type="text"
+                           id="param-amt" value="250">
+                  </div>
+                  <button type="button" class="btn btn-primary"
+                          id="btn-administration">
+                    シミュレーション実行
+                  </button>
+                </form>
+              </div>
+            </div>
+            <!-- set parameter (start) -->
+
+            <!-- plot -->
+            <div class="col-sm-7">
+              <div id="my-container" style="width: 540px; height: 500px">
+                <div id="plot-administration"></div>
+                <table class="table table-primary table-striped"
+                       id="table-administration"></table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 投与経路 終了 -->
+
+        <!-- 反復投与 開始 -->
+        <div id="elem-repeat" class="tab-pane">
+          <h4>反復投与時における投与量および生物学的半減期の影響</h4>
+          <BR>
+          <div class="row">
+            <!-- set parameter (start) -->
+            <div class="col-sm-5">
+              <div class="card p-3 bg-light">
+                <div class="row">
+                  <label class="form-label">投与量</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-amt"
+                             type="range" class="form-range"
+                             min="0" max="500" step="50" value="200">
+                    </div>
+                    <div class="col-5" id="value-amt">200 (mg)</div>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="form-label">投与間隔</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-interval"
+                             type="range" class="form-range"
+                             min="1" max="4" step="0.2" value="2">
+                    </div>
+                    <div class="col-5" id="value-interval">2.0 (h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">生物学的半減期</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-hl"
+                             type="range" class="form-range"
+                             min="1" max="4" step="0.2" value="2">
+                    </div>
+                    <div class="col-5" id="value-hl">2.0 (h)</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+            <!-- set parameter (start) -->
+
+            <!-- plot -->
+            <div class="col-sm-7">
+              <div id="my-container" style="width: 540px; height: 500px">
+                <div id="plot-repeat"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 反復投与 終了 -->
+
+        <!-- 負荷投与 開始 -->
+        <div id="elem-loading" class="tab-pane">
+          <h4>反復投与時における負荷投与の影響</h4>
+          <h5>投与量 200 mg, 青色：同量を反復投与, オレンジ色：負荷投与</h5>
+          <BR>
+          <div class="row">
+            <!-- set parameter (start) -->
+            <div class="col-sm-5">
+              <div class="card p-3 bg-light">
+                <div class="row">
+                  <label class="form-label">負荷投与量</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-1st"
+                             type="range" class="form-range"
+                             min="0" max="600" step="10" value="200">
+                    </div>
+                    <div class="col-5" id="value-1st">200 (mg)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">ka値（0の場合は静脈内注射）</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-ka"
+                             type="range" class="form-range"
+                             min="0" max="20" step="0.1" value="3.0">
+                    </div>
+                    <div class="col-5" id="value-ka">3.0 (1/h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">クリアランス値</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-cl"
+                             type="range" class="form-range"
+                             min="1" max="5" step="0.1" value="2">
+                    </div>
+                    <div class="col-5" id="value-cl">2.0 (L/h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">分布容積</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-vc"
+                             type="range" class="form-range"
+                             min="5" max="50" step="1" value="20">
+                    </div>
+                    <div class="col-5" id="value-vc">20.0 (L)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- set parameter (start) -->
+
+            <!-- plot -->
+            <div class="col-sm-7">
+              <div id="my-container" style="width: 540px; height: 500px">
+                <div id="plot-loading"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 負荷投与 終了 -->
+
+        <!-- 投与計画 開始 -->
+        <div id="elem-plan" class="tab-pane">
+          <h4>薬物の投与回数による違い</h4>
+          <BR>
+          <div class="row">
+            <!-- set parameter (start) -->
+            <div class="col-sm-5">
+              <div class="card p-3 bg-light">
+                <form>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-times1">
+                      回数1（回/日）
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-times1" value="1">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-times2">
+                      回数2（回/日）
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-times2" value="3">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-times3">
+                      回数3（回/日）
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-times3" value="8">
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label" for="param-mic">
+                      MIC (μg/mL)
+                    </label>
+                    <input class="form-control" type="text"
+                           id="param-mic" value="1">
+                  </div>
+                  <button type="button" class="btn btn-primary" id="btn-plan">
+                    シミュレーション実行
+                  </button>
+                </form>
+              </div>
+            </div>
+            <!-- set parameter (start) -->
+
+            <!-- plot -->
+            <div class="col-sm-7">
+              <div id="my-container" style="width: 540px; height: 500px">
+                <div id="plot-plan"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 投与計画 終了 -->
+
+        <!-- 臓器障害（腎排泄型薬物） 開始 -->
+        <div id="elem-dysfunctionA" class="tab-pane">
+          <h4>臓器障害による違い</h4>
+          <h5>腎排泄型薬物（アモキシシリン）</h5>
+          <BR>
+          <div class="row">
+            <!-- set parameter (start) -->
+            <div class="col-sm-5">
+              <div class="card p-3 bg-light">
+                <h5>クリアランス値 (L/h)</h5>
+                <form>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-cl1">
+                      正常
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-cl1">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-cl2">
+                      肝機能50%
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-cl2">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-cl3">
+                      肝機能0%
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-cl3">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-cl4">
+                      腎機能50%
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-cl4">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-cl5">
+                      腎機能0%
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-cl5">
+                  </div>
+                  <button type="button" class="btn btn-primary" id="btn-dysfunctionA">
+                    シミュレーション実行
+                  </button>
+                </form>
+              </div>
+            </div>
+            <!-- set parameter (start) -->
+
+            <!-- plot -->
+            <div class="col-sm-7">
+              <div id="my-container" style="width: 540px; height: 500px">
+                <div id="plot-dysfunctionA1"></div>
+                <table class="table table-primary table-striped"
+                       id="table-dysfunctionA1"></table>
+                <div id="plot-dysfunctionA2"></div>
+                <table class="table table-primary table-striped"
+                       id="table-dysfunctionA2"></table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 臓器障害（腎排泄型薬物） 終了 -->
+
+        <!-- 臓器障害（肝排泄型薬物） 開始 -->
+        <div id="elem-dysfunctionB" class="tab-pane">
+          <h4>臓器障害による違い</h4>
+          <h5>肝排泄型薬物（テオフィリン）</h5>
+          <BR>
+          <div class="row">
+            <!-- set parameter (start) -->
+            <div class="col-sm-5">
+              <div class="card p-3 bg-light">
+                <h5>クリアランス値 (L/h)</h5>
+                <form>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-cl1">
+                      正常
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-cl1">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-cl2">
+                      肝機能50%
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-cl2">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-cl3">
+                      肝機能0%
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-cl3">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-cl4">
+                      腎機能50%
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-cl4">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-cl5">
+                      腎機能0%
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-cl5">
+                  </div>
+                  <button type="button" class="btn btn-primary" id="btn-dysfunctionB">
+                    シミュレーション実行
+                  </button>
+                </form>
+              </div>
+            </div>
+            <!-- set parameter (start) -->
+
+            <!-- plot -->
+            <div class="col-sm-7">
+              <div id="my-container" style="width: 540px; height: 500px">
+                <div id="plot-dysfunctionB1"></div>
+                <table class="table table-primary table-striped"
+                       id="table-dysfunctionB1"></table>
+                <div id="plot-dysfunctionB2"></div>
+                <table class="table table-primary table-striped"
+                       id="table-dysfunctionB2"></table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 臓器障害（肝排泄型薬物） 終了 -->
+
+        <!-- 分布容積 開始 -->
+        <div id="elem-Vd" class="tab-pane">
+          <h4>分布容積による違い</h4>
+          <BR>
+          <div class="row">
+            <!-- set parameter (start) -->
+            <div class="col-sm-5">
+              <div class="card p-3 bg-light">
+                <form>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-times1">
+                      分布容積1（倍）
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-times1" value="1">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-times2">
+                      分布容積2（倍）
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-times2" value="2">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="param-times3">
+                      分布容積3（倍）
+                    </label>
+                      <input class="form-control" type="text"
+                             id="param-times3" value="3">
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label" for="param-days">
+                      投与日数（日）
+                    </label>
+                    <input class="form-control" type="text"
+                           id="param-days" value="21">
+                  </div>
+                  <button type="button" class="btn btn-primary" id="btn-Vd">
+                    シミュレーション実行
+                  </button>
+                </form>
+              </div>
+            </div>
+            <!-- set parameter (start) -->
+
+            <!-- plot -->
+            <div class="col-sm-7">
+              <div id="my-container" style="width: 540px; height: 500px">
+                <div id="plot-Vd"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 分布容積 終了 -->
+
+        <!-- 点滴 開始 -->
+        <div id="elem-infusion" class="tab-pane">
+          <h4>点滴時間による血中濃度の推移の違い</h4>
+          <h5>青色：静脈内注射 (100 mg), オレンジ色：点滴</h5>
+          <BR>
+          <div class="row">
+            <!-- set parameter (start) -->
+            <div class="col-sm-5">
+              <div class="card p-3 bg-light">
+                <div class="row">
+                  <label class="form-label">点滴時間</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-duration"
+                             type="range" class="form-range"
+                             min="0.1" max="8" step="0.1" value="3">
+                    </div>
+                    <div class="col-5" id="value-duration">3.0 (h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">投与量（静脈内注射は100mg）</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-amt"
+                             type="range" class="form-range"
+                             min="0" max="500" step="10" value="100">
+                    </div>
+                    <div class="col-5" id="value-amt">100 (mg)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">クリアランス値</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-cl"
+                             type="range" class="form-range"
+                             min="1" max="50" step="0.5" value="10">
+                    </div>
+                    <div class="col-5" id="value-cl">10.0 (L/h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">分布容積</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-vc"
+                             type="range" class="form-range"
+                             min="5" max="50" step="0.5" value="10">
+                    </div>
+                    <div class="col-5" id="value-vc">10.0 (L)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">k12値（中央 → 末梢）</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-k12"
+                             type="range" class="form-range"
+                             min="0" max="30" step="0.1" value="0">
+                    </div>
+                    <div class="col-5" id="value-k12">0.0 (1/h)</div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="form-label">k21値（中央 ← 末梢）</label>
+                  <div class="row">
+                    <div class="col-7">
+                      <input id="param-k21"
+                             type="range" class="form-range"
+                             min="0" max="30" step="0.1" value="0">
+                    </div>
+                    <div class="col-5" id="value-k21">0.0 (1/h)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- set parameter (end) -->
+
+            <!-- plot (start) -->
+            <div class="col-sm-7">
+              <div id="my-container" style="width: 540px; height: 500px">
+                <div id="plot-infusion"></div>
+              </div>
+              </div>
+            </div>
+            <!-- plot (end) -->
+        </div>
+        <!-- 点滴 終了 -->
+      </div>
+    </div>
+  </body>
+</html>
